@@ -19,9 +19,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String URL = "https://zoloz-sdk.herokuapp.com/";
+  // String URL = "https://zoloz-sdk.herokuapp.com/";
 
-  // String URL = "http://192.168.0.104:8080/";
+  String URL = "http://192.168.0.104:8080/";
 
   String FACE_INIT = "zoloz/facecapture/initialize";
 
@@ -128,7 +128,6 @@ class _MyAppState extends State<MyApp> {
       setLoading(true);
       var _metaInfo = await ZolozkitForFlutter.metaInfo;
       var _initFaceRes = await initFace(_metaInfo);
-      var _res = await checkResult(_initFaceRes.transactionId!);
       await zolozSdk(_initFaceRes);
     };
   }
