@@ -26,7 +26,8 @@ class _MyAppState extends State<MyApp> {
   String FACE_INIT = "zoloz/facecapture/initialize";
 
   String FACE_RESULT = "zoloz/facecapture/checkresult";
-
+  String bizId = "dayona";
+  // String get bizId => "${DateTime.now().millisecondsSinceEpoch}";
   bool loading = false;
   double height(BuildContext ctx) => MediaQuery.of(ctx).size.height;
   double width(BuildContext ctx) => MediaQuery.of(ctx).size.width;
@@ -127,13 +128,18 @@ class _MyAppState extends State<MyApp> {
     return () async {
       setLoading(true);
       var _metaInfo = await ZolozkitForFlutter.metaInfo;
-      var _initFaceRes = await initFace(_metaInfo);
+      var _faceInitPayload = FaceInitPayload(
+          bizId: bizId,
+          docType: "00000001003",
+          metaInfo: _metaInfo,
+          userId: "${DateTime.now().millisecondsSinceEpoch}");
+      var _initFaceRes = await initFace(jsonEncode(_faceInitPayload.toJson()));
       await zolozSdk(_initFaceRes);
     };
   }
 
-  Future<ZolozMicroServicesResponse> initFace(String? metaInfo) async {
-    var response = await Dio().post(URL + FACE_INIT, data: metaInfo);
+  Future<ZolozMicroServicesResponse> initFace(String? payload) async {
+    var response = await Dio().post(URL + FACE_INIT, data: payload);
     var _res = ZolozMicroServicesResponse.fromJson(response.data);
     return _res;
   }
@@ -144,7 +150,11 @@ class _MyAppState extends State<MyApp> {
     var _zolozInit = await ZolozkitForFlutter.start(_initFaceRes.clientCfg!, {},
         (res) async {
       if (res) {
-        var _res = await checkResult(_initFaceRes.transactionId!);
+        var _resutlFacePayload = ResultFacePayload(
+            bizId: bizId,
+            isReturnImage: "false",
+            transactionId: _initFaceRes.transactionId);
+        var _res = await checkResult(jsonEncode(_resutlFacePayload.toJson()));
         resultFace = CheckFaceResult.fromJson((_res as Response<dynamic>).data);
         setLoading(false);
       } else {
@@ -154,9 +164,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<dynamic> checkResult(String transactionId) async {
+  Future<dynamic> checkResult(String payload) async {
     try {
-      var res = await Dio().post('$URL$FACE_RESULT', data: transactionId);
+      var res = await Dio().post('$URL$FACE_RESULT', data: payload);
       return res;
     } catch (e) {
       return "$e";
@@ -297,6 +307,60 @@ class Rect {
     _data['left'] = left;
     _data['bottom'] = bottom;
     _data['right'] = right;
+    return _data;
+  }
+}
+
+class FaceInitPayload {
+  FaceInitPayload({
+    this.metaInfo,
+    this.userId,
+    this.docType,
+    this.bizId,
+  });
+  String? metaInfo;
+  String? userId;
+  String? docType;
+  String? bizId;
+
+  FaceInitPayload.fromJson(Map<String, dynamic> json) {
+    metaInfo = json['metaInfo'];
+    userId = json['userId'];
+    docType = json['docType'];
+    bizId = json['bizId'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final _data = <String, dynamic>{};
+    _data['metaInfo'] = metaInfo;
+    _data['userId'] = userId;
+    _data['docType'] = docType;
+    _data['bizId'] = bizId;
+    return _data;
+  }
+}
+
+class ResultFacePayload {
+  ResultFacePayload({
+    this.transactionId,
+    this.isReturnImage,
+    this.bizId,
+  });
+  String? transactionId;
+  String? isReturnImage;
+  String? bizId;
+
+  ResultFacePayload.fromJson(Map<String, dynamic> json) {
+    transactionId = json['transactionId'];
+    isReturnImage = json['isReturnImage'];
+    bizId = json['bizId'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final _data = <String, dynamic>{};
+    _data['transactionId'] = transactionId;
+    _data['isReturnImage'] = isReturnImage;
+    _data['bizId'] = bizId;
     return _data;
   }
 }
